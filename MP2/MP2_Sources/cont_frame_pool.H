@@ -42,9 +42,15 @@ class ContFramePool {
     
 private:
     /* -- DEFINE YOUR CONT FRAME POOL DATA STRUCTURE(s) HERE. */
+    unsigned char * bitmap;        // We implement the simple frame pool with a bitmap
+    unsigned int    nFreeFrames;   //
+    unsigned long   base_frame_no; // Where does the frame pool start in phys mem?
+    unsigned long   nframes;       // Size of the frame pool
+    unsigned long   info_frame_no; // Where do we store the management information?
     
-    
-    
+    static ContFramePool* frame_pools_list; //doubly linked list which is common to all ContFramePool objects
+    ContFramePool* next; //pointer to next frame pool in linked list
+    ContFramePool* prev; //pointer to previous frame pool in linked list
     /* ---- STATE MANAGEMENT */
     
     enum class FrameState {Free, Used, HoS};
@@ -118,5 +124,13 @@ public:
      Other implementations need a different number of info frames.
      The exact number is computed in this function..
      */
+
+    /**
+     * This is a function I added to verify the functionality of my frame manager. It prints information
+     * about the frame addresses, number of frames, number of free/used frames, and number/location of 
+     * info frames for each frame pool that currently exists.
+     */
+    /// @brief Static function which prints information about the pools that currently exist.
+    static void print_pool_info();
 };
 #endif

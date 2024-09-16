@@ -71,22 +71,28 @@ int main() {
     ContFramePool kernel_mem_pool(KERNEL_POOL_START_FRAME,
                                   KERNEL_POOL_SIZE,
                                   0);
-    
+    // Console::puti(KERNEL_POOL_START_FRAME);
+    // Console::puts(" \n HERE HERE HERE \n");
+    // Console::puti(KERNEL_POOL_SIZE);
+    // Console::puts("\n");
+
     /* ---- PROCESS POOL -- */
 
-/*  // In later machine problems, we will be using two pools. You may want to comment this out and test 
+  // In later machine problems, we will be using two pools. You may want to uncomment this out and test 
     // the management of two pools.
 
     unsigned long n_info_frames = ContFramePool::needed_info_frames(PROCESS_POOL_SIZE);
 
     unsigned long process_mem_pool_info_frame = kernel_mem_pool.get_frames(n_info_frames);
-    
+    // Console::puts("process_mem_pool_info_frame: ");
+    // Console::puti((int) process_mem_pool_info_frame);
+    // Console::puts("\n");
     ContFramePool process_mem_pool(PROCESS_POOL_START_FRAME,
                                    PROCESS_POOL_SIZE,
                                    process_mem_pool_info_frame);
     
     process_mem_pool.mark_inaccessible(MEM_HOLE_START_FRAME, MEM_HOLE_SIZE);
-*/
+
 
     /* -- MOST OF WHAT WE NEED IS SETUP. THE KERNEL CAN START. */
 
@@ -96,8 +102,17 @@ int main() {
     
     test_memory(&kernel_mem_pool, N_TEST_ALLOCATIONS);
 
+    test_memory(&process_mem_pool, N_TEST_ALLOCATIONS);
+
+    //we can see in the output that the frames I allocate here
+    //are properly released, because the process pool only has 
+    //the 256 frames from the hole still Used after the program finishes 
+    process_mem_pool.mark_inaccessible(7239, 100);
+    process_mem_pool.release_frames(7239);
+
+
     /* ---- Add code here to test the frame pool implementation. */
-    
+    ContFramePool::print_pool_info();
     /* -- NOW LOOP FOREVER */
     Console::puts("Testing is DONE. We will do nothing forever\n");
     Console::puts("Feel free to turn off the machine now.\n");
@@ -113,7 +128,9 @@ void test_memory(ContFramePool * _pool, unsigned int _allocs_to_go) {
     if (_allocs_to_go > 0) {
         // We have not reached the end yet. 
         int n_frames = _allocs_to_go % 4 + 1;               // number of frames you want to allocate
+        // int n_frames = 1; 
         unsigned long frame = _pool->get_frames(n_frames);  // we allocate the frames from the pool
+        // Console::puts("Got "); Console::puti(n_frames);Console::puts(" frames starting at frame "); Console::puti(frame); Console::puts("\n");
         int * value_array = (int*)(frame * (4 KB));         // we pick a unique number that we want to write into the memory we just allocated
         for (int i = 0; i < (1 KB) * n_frames; i++) {       // we write this value int the memory locations
             value_array[i] = _allocs_to_go;
@@ -130,6 +147,8 @@ void test_memory(ContFramePool * _pool, unsigned int _allocs_to_go) {
                 for(;;);                                    // We throw a fit.
             }
         }
+        // Console::puts("Releasing frame number "); Console::puti(frame);Console::puts("\n");
+        // ContFramePool::print_pool_info();
         ContFramePool::release_frames(frame);               // We free the memory that we allocated above.
     }
 }
